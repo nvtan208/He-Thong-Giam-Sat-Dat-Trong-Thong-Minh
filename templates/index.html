@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Garden Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ── */
+:root {
+  --bg:       #080f08;
+  --surface:  #0f160f;
+  --card:     #121a12;
+  --border:   #1a2a1a;
+  --green:    #4ade80;
+  --green2:   #22c55e;
+  --blue:     #60a5fa;
+  --yellow:   #fbbf24;
+  --red:      #f87171;
+  --text:     #dff0df;
+  --muted:    #3d533d;
+  --mono:     'Space Mono', monospace;
+  --sans:     'Syne', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  padding: 0 0 40px;
+}
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 10%, #0b1f0b 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 90% 90%, #080f0a 0%, transparent 70%);
+}
+
+/* ── Layout ── */
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; position:relative; }
+
+/* ── Header ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0 18px;
+  margin-bottom: 28px;
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { font-size: 1.4rem; font-weight: 800; letter-spacing:-0.5px; }
+.logo em { color: var(--green); font-style: normal; }
+.live-badge {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+  transition: color 0.3s;
+}
+.live-badge.online { color: var(--green); }
+.live-dot {
+  width:7px; height:7px; border-radius:50%;
+  background: var(--muted); transition: all 0.3s;
+}
+.live-badge.online .live-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── AI Banner ── */
+.ai-banner {
+  background: linear-gradient(135deg, #0c1c0c, #111a11);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+}
+.ai-left { flex: 1; }
+.ai-tag {
+  font-family: var(--mono); font-size: 0.65rem;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--green); margin-bottom: 6px;
+}
+.ai-decision {
+  font-size: 1.4rem; font-weight: 800;
+  transition: color 0.4s;
+}
+.ai-decision.water { color: var(--blue); }
+.ai-decision.ok    { color: var(--green); }
+.ai-reason { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+.ai-right { text-align: right; min-width: 100px; }
+.conf-num {
+  font-family: var(--mono); font-size: 1.8rem;
+  font-weight: 700; color: var(--green);
+}
+.conf-label { font-size: 0.7rem; color: var(--muted); }
+.conf-bar {
+  height: 3px; background: var(--border);
+  border-radius: 2px; margin-top: 10px; overflow: hidden;
+}
+.conf-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--green2), var(--green));
+  transition: width 0.8s ease;
+}
+
+/* ── Sensor Row ── */
+.sensor-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.sensor-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 16px 18px;
+  text-align: center;
+  transition: border-color 0.3s, transform 0.2s;
+  cursor: default;
+}
+.sensor-card:hover { border-color: var(--green); transform: translateY(-2px); }
+.s-icon { font-size: 1.8rem; margin-bottom: 10px; }
+.s-val {
+  font-family: var(--mono); font-size: 2rem;
+  font-weight: 700; line-height: 1;
+  transition: color 0.4s;
+}
+.s-unit { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+.s-label {
+  font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-top: 10px;
+}
+
+/* ── Pump Control ── */
+.pump-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+.pump-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.pump-title { font-weight: 700; }
+.mode-tag {
+  font-family: var(--mono); font-size: 0.65rem;
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--border); color: var(--muted);
+  transition: all 0.3s;
+}
+.mode-tag.auto   { background:#0c1e0c; color:var(--green); }
+.mode-tag.manual { background:#1e1500; color:var(--yellow); }
+
+.pump-row { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+.pump-circle {
+  width:52px; height:52px; border-radius:50%;
+  border: 2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; transition: all 0.4s;
+}
+.pump-circle.on {
+  border-color: var(--blue);
+  background: #0a1a2a;
+  box-shadow: 0 0 20px rgba(96,165,250,0.25);
+  animation: pump-glow 2s infinite;
+}
+@keyframes pump-glow {
+  0%,100%{ box-shadow:0 0 20px rgba(96,165,250,0.2); }
+  50%    { box-shadow:0 0 35px rgba(96,165,250,0.5); }
+}
+.pump-status-text { font-size:1.1rem; font-weight:700; }
+.pump-status-text.on  { color: var(--blue); }
+.pump-status-text.off { color: var(--muted); }
+.pump-sub { font-size:0.78rem; color:var(--muted); margin-top:3px; }
+
+.btn-row { display:flex; gap:10px; }
+.btn {
+  flex:1; padding:13px 10px;
+  border:none; border-radius:10px;
+  font-family: var(--sans); font-weight:700; font-size:0.85rem;
+  cursor:pointer; transition: all 0.2s; letter-spacing:0.3px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-on   { background: var(--blue); color: #000; }
+.btn-on:hover  { background: #93c5fd; }
+.btn-off  { background: var(--border); color: var(--muted); border:1px solid var(--border); }
+.btn-off:hover { color: var(--text); border-color: var(--muted); }
+.btn-auto { background: transparent; color: var(--green); border:1px solid var(--green); }
+.btn-auto:hover { background: #0c1e0c; }
+
+/* ── History Table ── */
+.history-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.history-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: 0.9rem;
+}
+.tbl-wrap { overflow-x: auto; }
+table { width:100%; border-collapse:collapse; }
+th {
+  font-family: var(--mono); font-size:0.65rem; letter-spacing:2px;
+  text-transform:uppercase; color:var(--muted);
+  padding: 10px 16px; text-align:left;
+  background: var(--surface); font-weight:400;
+}
+td {
+  padding: 10px 16px;
+  font-family: var(--mono); font-size:0.8rem;
+  border-top: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tr:hover td { background: var(--surface); }
+.badge {
+  padding: 2px 9px; border-radius: 10px;
+  font-size: 0.7rem; font-weight: 700;
+}
+.badge-water { background:#0d1e2d; color:var(--blue); }
+.badge-ok    { background:#0c1e0c; color:var(--green); }
+.badge-pump1 { background:#0d1e2d; color:var(--blue); }
+.badge-pump0 { background:var(--border); color:var(--muted); }
+
+/* ── Last update ── */
+.footer {
+  text-align:center; margin-top:16px;
+  font-family:var(--mono); font-size:0.68rem; color:var(--muted);
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="header-inner">
+      <div class="logo">Smart<em>Garden</em> <span style="font-size:.8rem;color:var(--muted);font-weight:400">v1.0</span></div>
+      <div class="live-badge" id="liveBadge">
+        <div class="live-dot"></div>
+        <span id="liveText">OFFLINE</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- AI Banner -->
+  <div class="ai-banner">
+    <div class="ai-left">
+      <div class="ai-tag">▶ AI Decision Engine — 94.1% accuracy</div>
+      <div class="ai-decision" id="aiDecision">—</div>
+      <div class="ai-reason" id="aiReason">Đang chờ dữ liệu...</div>
+      <div class="conf-bar" style="margin-top:12px">
+        <div class="conf-fill" id="confFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="ai-right">
+      <div class="conf-num" id="confNum">—</div>
+      <div class="conf-label">% tin cậy</div>
+    </div>
+  </div>
+
+  <!-- Sensor Row -->
+  <div class="sensor-row">
+    <div class="sensor-card">
+      <div class="s-icon">🌱</div>
+      <div class="s-val" id="valSoil" style="color:var(--green)">—</div>
+      <div class="s-unit">%</div>
+      <div class="s-label">Độ ẩm đất</div>
+    </div>
+    <div class="sensor-card">
+      <div class="s-icon">🌡️</div>
+      <div class="s-val" id="valTemp">—</div>
+      <div class="s-unit">°C</div>
+      <div class="s-label">Nhiệt độ</div>
+    </div>
+    <div class="sensor-card">
+      <div class="s-icon">💨</div>
+      <div class="s-val" id="valHumi">—</div>
+      <div class="s-unit">%</div>
+      <div class="s-label">Độ ẩm KK</div>
+    </div>
+  </div>
+
+  <!-- Pump Control -->
+  <div class="pump-card">
+    <div class="pump-top">
+      <div class="pump-title">Điều khiển máy bơm</div>
+      <div class="mode-tag auto" id="modeTag">⚡ TỰ ĐỘNG</div>
+    </div>
+    <div class="pump-row">
+      <div class="pump-circle" id="pumpCircle">○</div>
+      <div>
+        <div class="pump-status-text off" id="pumpText">DỪNG</div>
+        <div class="pump-sub">Máy bơm mini 5V</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-on"   onclick="cmdPump('on')">💧 Bật bơm</button>
+      <button class="btn btn-off"  onclick="cmdPump('off')">⏹ Tắt bơm</button>
+      <button class="btn btn-auto" onclick="cmdPump('auto')">⚡ Tự động</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-card">
+    <div class="history-header">📋 Lịch sử gần nhất</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Đất %</th>
+            <th>Nhiệt °C</th>
+            <th>Ẩm KK %</th>
+            <th>Bơm</th>
+            <th>AI</th>
+          </tr>
+        </thead>
+        <tbody id="histBody">
+          <tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px">Đang tải...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer" id="lastUpdate">Cập nhật mỗi 2 giây</div>
+</div>
+
+<script>
+// ── Poll state mỗi 2 giây ──
+async function fetchState() {
+  try {
+    const r = await fetch('/api/state');
+    const d = await r.json();
+    updateUI(d);
+  } catch(e) {
+    document.getElementById('liveBadge').className = 'live-badge';
+    document.getElementById('liveText').textContent = 'OFFLINE';
+  }
+}
+
+function updateUI(d) {
+  const online = d.last_update !== null;
+
+  // Live badge
+  const badge = document.getElementById('liveBadge');
+  badge.className = 'live-badge' + (online ? ' online' : '');
+  document.getElementById('liveText').textContent = online ? 'LIVE' : 'OFFLINE';
+
+  // Sensors
+  document.getElementById('valSoil').textContent = online ? d.soil : '—';
+  document.getElementById('valTemp').textContent = online ? d.temp.toFixed(1) : '—';
+  document.getElementById('valHumi').textContent = online ? d.humidity.toFixed(0) : '—';
+
+  // Soil color
+  document.getElementById('valSoil').style.color = (d.soil < 45) ? 'var(--blue)' : 'var(--green)';
+
+  // AI
+  if (d.ai && d.ai.decision) {
+    const isWater = d.ai.decision === 'CAN_TUOI';
+    const dec = document.getElementById('aiDecision');
+    dec.textContent = isWater ? '💧 CẦN TƯỚI NƯỚC' : '✅ ĐẤT ĐỦ ẨM';
+    dec.className = 'ai-decision ' + (isWater ? 'water' : 'ok');
+    document.getElementById('aiReason').textContent = d.ai.reason || '';
+    document.getElementById('confNum').textContent = d.ai.confidence + '%';
+    document.getElementById('confFill').style.width = d.ai.confidence + '%';
+  }
+
+  // Pump
+  const on = d.pump;
+  const circle = document.getElementById('pumpCircle');
+  circle.className = 'pump-circle' + (on ? ' on' : '');
+  circle.textContent = on ? '💧' : '○';
+  const pt = document.getElementById('pumpText');
+  pt.textContent = on ? 'ĐANG CHẠY' : 'DỪNG';
+  pt.className = 'pump-status-text ' + (on ? 'on' : 'off');
+
+  // Mode
+  const mt = document.getElementById('modeTag');
+  mt.className = 'mode-tag ' + d.mode;
+  mt.textContent = d.mode === 'auto' ? '⚡ TỰ ĐỘNG' : '✋ THỦ CÔNG';
+
+  // Last update
+  if (d.last_update) {
+    document.getElementById('lastUpdate').textContent = 'Cập nhật lúc: ' + d.last_update;
+  }
+}
+
+// ── Poll history mỗi 5 giây ──
+async function fetchHistory() {
+  try {
+    const r = await fetch('/api/history');
+    const rows = await r.json();
+    const body = document.getElementById('histBody');
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);text-align:center;padding:24px">Chưa có dữ liệu</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(r => {
+      const ts = r.ts ? r.ts.substring(11,19) : '—';
+      const isWater = r.ai_result === 'CAN_TUOI';
+      return `<tr>
+        <td>${ts}</td>
+        <td>${r.soil}</td>
+        <td>${r.temp}</td>
+        <td>${r.humidity}</td>
+        <td><span class="badge ${r.pump ? 'badge-pump1':'badge-pump0'}">${r.pump ? 'BẬT':'TẮT'}</span></td>
+        <td><span class="badge ${isWater ? 'badge-water':'badge-ok'}">${isWater ? 'Cần tưới':'Đủ ẩm'}</span></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Điều khiển bơm ──
+async function cmdPump(action) {
+  await fetch('/api/pump', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action})
+  });
+  fetchState();
+}
+
+// ── Start ──
+fetchState();
+fetchHistory();
+setInterval(fetchState, 2000);
+setInterval(fetchHistory, 5000);
+</script>
+</body>
+</html>
